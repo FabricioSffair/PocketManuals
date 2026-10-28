@@ -51,15 +51,25 @@ struct ManualsRootView: View {
         }
         .task { SpotlightIndex.syncAtLaunch(documents: library.documents) }
         .onContinueUserActivity(CSSearchableItemActionType, perform: openSpotlightResult)
+        #if os(macOS)
+        .onChange(of: SpotlightIndex.requests.identifier, initial: true) { _, identifier in
+            guard let identifier else { return }
+            SpotlightIndex.requests.identifier = nil
+            openSpotlightResult(identifier)
+        }
+        #endif
         .sheet(item: $spotlightPage) { page in
             ManualPageViewer(reference: page)
         }
     }
 
     private func openSpotlightResult(_ activity: NSUserActivity) {
-        guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
-              let page = SpotlightIndex.page(for: identifier, documents: library.documents)
-        else { return }
+        guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
+        openSpotlightResult(identifier)
+    }
+
+    private func openSpotlightResult(_ identifier: String) {
+        guard let page = SpotlightIndex.page(for: identifier, documents: library.documents) else { return }
         spotlightPage = page
     }
 }

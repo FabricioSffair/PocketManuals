@@ -17,6 +17,9 @@ import RailtownLogger
 
 @main
 struct PocketManualsApp: App {
+    #if os(macOS)
+    @NSApplicationDelegateAdaptor(SpotlightAppDelegate.self) private var appDelegate
+    #endif
     @State private var settings: ProviderSettings
     @State private var library: ManualLibrary
     @State private var ask: AskViewModel

@@ -11,6 +11,9 @@ import CoreSpotlight
 import Foundation
 import PDFKit
 import UniformTypeIdentifiers
+#if os(macOS)
+import AppKit
+#endif
 
 enum SpotlightIndex {
     private static let manualPrefix = "manual-page|"
@@ -85,6 +88,11 @@ enum SpotlightIndex {
 
     // MARK: Opening a result
 
+    #if os(macOS)
+    /// The tapped result's identifier, set by `SpotlightAppDelegate` and read by the root view.
+    @MainActor static let requests = SpotlightRequests()
+    #endif
+
     /// The page a tapped result's identifier points at, or `nil` when its manual is gone.
     @MainActor
     static func page(for identifier: String, documents: [ManualDocument]) -> PageReference? {
@@ -97,3 +105,29 @@ enum SpotlightIndex {
         return PageReference(docID: document.id, page: page, title: document.title)
     }
 }
+
+#if os(macOS)
+/// The latest tapped result that the window has not opened yet.
+@MainActor @Observable
+final class SpotlightRequests {
+    var identifier: String?
+}
+
+/// On macOS, Spotlight hands a tapped result to the app delegate, and SwiftUI's
+/// `onContinueUserActivity` never sees it. This passes the identifier on to the root view, also
+/// when the click launched the app.
+final class SpotlightAppDelegate: NSObject, NSApplicationDelegate {
+    func application(
+        _ application: NSApplication,
+        continue userActivity: NSUserActivity,
+        restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void
+    ) -> Bool {
+        guard userActivity.activityType == CSSearchableItemActionType,
+              let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String
+        else { return false }
+        AppLog.info("Spotlight result opened", properties: ["Item": identifier])
+        MainActor.assumeIsolated { SpotlightIndex.requests.identifier = identifier }
+        return true
+    }
+}
+#endif
