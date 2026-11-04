@@ -34,6 +34,10 @@ struct ManualPageViewer: View {
                 }
             }
         }
+        #if os(macOS)
+        // A macOS sheet takes its size from its content, and PDFView asks for none.
+        .frame(minWidth: 640, minHeight: 720)
+        #endif
     }
 }
 
