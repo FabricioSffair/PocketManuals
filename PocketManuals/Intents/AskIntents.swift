@@ -113,6 +113,18 @@ struct PocketManualsShortcuts: AppShortcutsProvider {
             shortTitle: "Ask My Manuals",
             systemImageName: "book.pages"
         )
+        // Siri asks for the search term after the phrase, as it does for the question above.
+        if #available(iOS 27, macOS 27, visionOS 27, *) {
+            AppShortcut(
+                intent: SearchManualsIntent(),
+                phrases: [
+                    "Search \(.applicationName)",
+                    "Find in my manuals in \(.applicationName)",
+                ],
+                shortTitle: "Search My Manuals",
+                systemImageName: "magnifyingglass"
+            )
+        }
     }
 }
 

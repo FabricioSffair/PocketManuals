@@ -50,6 +50,11 @@ struct ManualsRootView: View {
             Task { await library.updateOpenAIKey(key) }
         }
         .task { SpotlightIndex.syncAtLaunch(documents: library.documents) }
+        .onChange(of: ask.askRequested, initial: true) { _, requested in
+            guard requested else { return }
+            ask.askRequested = false
+            tab = .ask
+        }
         .onContinueUserActivity(CSSearchableItemActionType, perform: openSpotlightResult)
         #if os(macOS)
         .onChange(of: SpotlightIndex.requests.identifier, initial: true) { _, identifier in

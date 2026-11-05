@@ -35,12 +35,30 @@ struct ManualsSettingsSection: View {
                 library.reindexAll()
             }
             .disabled(library.embedderStatus.map(isUnavailable) ?? true)
+            Button("Remove all from index…", role: .destructive) {
+                isConfirmingClear = true
+            }
+            .disabled(library.isClearingIndex)
+            .confirmationDialog(
+                "Remove all from the index?",
+                isPresented: $isConfirmingClear,
+                titleVisibility: .visible
+            ) {
+                Button("Remove all", role: .destructive) {
+                    Task { await library.clearIndex() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Wipes the search index and Spotlight entries for every manual. Your PDFs stay in the library, marked not indexed, so you can index them again.")
+            }
         } header: {
             Text("Index")
         } footer: {
             Text("Pages are embedded on-device when Apple's model is on this device; otherwise with OpenAI embeddings, only when Allow OpenAI embeddings is on and an OpenAI key is set. Re-indexing skips pages already stored for the active embedder.")
         }
     }
+
+    @State private var isConfirmingClear = false
 
     private func isUnavailable(_ status: ManualEmbedderStatus) -> Bool {
         if case .unavailable = status { return true }

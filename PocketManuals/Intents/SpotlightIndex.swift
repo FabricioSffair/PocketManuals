@@ -69,6 +69,16 @@ enum SpotlightIndex {
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [manualDomain(id)])
     }
 
+    /// Removes every item this app put in Spotlight, including ones for manuals no longer in the
+    /// library, and forgets which manuals were indexed.
+    static func removeAll() {
+        let defaults = UserDefaults.standard
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("spotlight.") {
+            defaults.removeObject(forKey: key)
+        }
+        CSSearchableIndex.default().deleteAllSearchableItems()
+    }
+
     // MARK: Launch
 
     @MainActor private static var didSync = false

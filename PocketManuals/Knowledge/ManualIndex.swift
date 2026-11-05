@@ -235,6 +235,16 @@ actor ManualIndex {
         }
     }
 
+    /// Deletes every store on disk, whichever embedder built it, and forgets the open ones. The
+    /// next index or search starts from an empty store. Call it with no indexing run in flight:
+    /// a run still holding a dropped store would write to a log that no longer exists.
+    func removeAll() throws {
+        stores.removeAll()
+        if FileManager.default.fileExists(atPath: root.path) {
+            try FileManager.default.removeItem(at: root)
+        }
+    }
+
     /// Chunks stored for a manual in the active embedder's store, or `nil` when no embedder is
     /// available.
     func chunkCount(manualID: String) async -> Int? {
