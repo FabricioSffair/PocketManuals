@@ -165,6 +165,36 @@ final class ManualLibrary {
         }
     }
 
+    /// Whether ``clearIndex()`` is still running; the UI disables its button meanwhile.
+    private(set) var isClearingIndex = false
+
+    /// Wipes every vector store and every Spotlight item, and marks every document not indexed.
+    /// The documents and their PDFs stay, so any of them can be indexed again.
+    func clearIndex() async {
+        guard !isClearingIndex else { return }
+        isClearingIndex = true
+        defer { isClearingIndex = false }
+
+        pending.removeAll()
+        // Wait for an in-flight run to stop, so nothing writes to a store after it is deleted.
+        if let worker {
+            worker.cancel()
+            await worker.value
+        }
+
+        SpotlightIndex.removeAll()
+        do {
+            try await index.removeAll()
+        } catch {
+            lastError = "Could not clear the index: \(error.localizedDescription)"
+        }
+        for position in documents.indices {
+            documents[position].indexState = .notIndexed
+        }
+        save()
+        await refreshEmbedderStatus()
+    }
+
     // MARK: Indexing
 
     /// Queues one document. Indexing runs one document at a time.

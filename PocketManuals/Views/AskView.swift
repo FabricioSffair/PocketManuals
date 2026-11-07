@@ -8,6 +8,10 @@
 
 import SwiftUI
 
+/// False hides the Ask screen's spinners, for demo recordings. A running step then shows a
+/// static icon; finished ones still show their checkmark.
+let askShowsSpinners = false
+
 struct AskView: View {
     @Environment(ProviderSettings.self) private var settings
     @Environment(ManualsPreferences.self) private var preferences
@@ -56,8 +60,10 @@ struct AskView: View {
                     .submitLabel(.send)
                     .onSubmit(ask)
                 Button(action: ask) {
-                    if model.isRunning {
+                    if model.isRunning, askShowsSpinners {
                         ProgressView()
+                    } else if model.isRunning {
+                        Text("Asking…")
                     } else {
                         Text("Ask")
                     }
@@ -155,7 +161,12 @@ struct AskView: View {
         switch state {
         case .idle: Image(systemName: "circle").foregroundStyle(.secondary)
         case .queued: Image(systemName: "clock").foregroundStyle(.secondary)
-        case .running: ProgressView().controlSize(.small)
+        case .running:
+            if askShowsSpinners {
+                ProgressView().controlSize(.small)
+            } else {
+                Image(systemName: "circle.dotted").foregroundStyle(.tint)
+            }
         case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
         case .skipped: Image(systemName: "minus.circle").foregroundStyle(.secondary)
         case .failed: Image(systemName: "xmark.octagon.fill").foregroundStyle(.red)

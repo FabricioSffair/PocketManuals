@@ -49,6 +49,8 @@ final class AskViewModel {
     /// `nil` searches every indexed manual.
     var scopeID: String?
     var errorMessage: String?
+    /// Set by an action that answers in Ask. The root view opens the tab and clears it.
+    var askRequested = false
 
     private(set) var isRunning = false
     private(set) var answererState: StepState = .idle
